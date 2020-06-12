@@ -332,7 +332,7 @@ class IssueSet:
             idx = int(idx_or_partial_hash) - 1
             comment = self.shelf[self.shelf.keys()[idx]]
         except:
-            print [key for key in self.shelf.iterkeys()]
+            #print [key for key in self.shelf.iterkeys()]
 
             def getCommentId(x):
                 if not 'comment_' in x:
@@ -1091,16 +1091,20 @@ if __name__ == '__main__':
 
         for item in issueSet.shelf.iteritems():
             if "comment" in item[0]:
+                index += 1
                 continue
             issue = item[1].get_data()
             if issue.status in filteredStati:
+                index += 1
                 continue
             if wantedTags and not issue.tags:
+                index += 1
                 continue
             if wantedTags:
                 matchingTags = [tag for tag in issue.tags.split(", ")
                     if tag in wantedTags]
                 if not matchingTags:
+                    index += 1
                     continue
             formatString = "%4d  %s  %-" + unicode(titleWidth + len("Title") - 1) + \
                 "s %-6s %5s %6s %s"
@@ -1119,12 +1123,19 @@ if __name__ == '__main__':
             print "Usage: %s %s <issue-id | index>" % (sys.argv[0], command)
         else:
             issue = issueSet[args[0]]
-            comments = "\n       ".join(["Comment (%s): %s" % (comment[0:7],
-                                        issueSet.get_comment(comment[0:7]).comment)
-                                        for comment in issue.comments])
-            if command == "show":
+            if hasattr(issue,"comments"):
+                comments = "\n".join(["Comment %s: %s" % (comment[0:7],
+                                      issueSet.get_comment(comment[0:7]).comment)
+                                      for comment in issue.comments])
+                ok = True
+            else:
+                print("This is a comment\n")
+                ok = False
+            if ok and command == "show":
                 if issue.title:
                     print "          Title:", issue.title
+                if issue.name:
+                    print "             ID:", issue.name[:7]
                 if issue.summary:
                     print "        Summary:", format_long_text(issue.summary)
                     print
@@ -1141,7 +1152,6 @@ if __name__ == '__main__':
                     print "       Assigned:", format_people_list(issue.assigned)
                 if issue.carbons:
                     print "             Cc:", format_people_list(issue.carbons)
-
                 if issue.issue_type:
                     print "           Type:", issue.issue_type
                 if issue.status:
@@ -1164,6 +1174,8 @@ if __name__ == '__main__':
                 print "        Created:", issue.created
                 if issue.modified:
                     print "       Modified:", issue.modified
+                if comments:
+                    print comments
             else:
                 write_object(issue)
 
